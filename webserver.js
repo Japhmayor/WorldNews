@@ -12,7 +12,6 @@
 /* jshint node: true */
 
 var express = require('express');
-var requests = require('request');
 
 var portno = 5000;   // Port number to use
 
@@ -21,11 +20,6 @@ var app = express();
 // We have the express static module (http://expressjs.com/en/starter/static-files.html) do all
 // the work for us.
 app.use(express.static(__dirname));
-
-// URL: https://api.cognitive.microsoft.com/bing/v7.0/news/search
-requests('http://www.google.com', function (error, response, body) {
-
-});
 
 var server = app.listen(portno, function () {
   var port = server.address().port;
