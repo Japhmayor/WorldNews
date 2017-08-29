@@ -14,10 +14,11 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         'Imagery © <a href="http://mapbox.com">Mapbox</a>',
         maxZoom: 3,
         id: 'mapbox.streets',
-        accessToken: 'pk.eyJ1IjoicmFndWlhcjIiLCJhIjoiY2o2cXlqMGkxMDNnNTJ3cGgycDVkbGZ0NyJ9.SqYXt15ZDa3B5ZIAqsqlJA'
+        accessToken: 'Dummy_access_token'
     }).addTo(map);
 
     var popup = L.popup();
+    var country_stories_dict = {};
 
     var mapStyle = {
         "weight": 2,
@@ -29,7 +30,6 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         style:mapStyle,
         onEachFeature: onEachFeature
     });
-
     worldGeoJSON.addTo(map);
 
     function highlightFeature(e) {
@@ -53,6 +53,25 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         info.update();
     }
 
+   	function generatePopupString(stories){
+   		var popupcontent = '';
+   		for (var i = 0; i <3; i ++) {
+            var story = stories[i];
+            var storyurl = story.url;
+            var storyname = story.name;
+            var imgurl = "";
+            // Handle error case with no image.
+            if (story.image !== undefined
+                && story.image.thumbnail !== undefined
+                && story.image.thumbnail.contentUrl !== undefined){
+                imgurl =story.image.thumbnail.contentUrl;
+            }
+            popupcontent += "<h3><img alt = \"no image could be displayed\" height='75px' " +
+                "width='75px' src = \"" + imgurl + "\"/>";
+            popupcontent += "<a href = " + storyurl + " target = \"_blank\">" + storyname + "</a></h3>";
+        }
+        return popupcontent
+   	}
 
     function getNews(e){
         var countryname = e.target.feature.properties.ADMIN;
@@ -68,84 +87,78 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
             .setLatLng(e.latlng)
             .setContent("Getting news for " + countryname)
             .openOn(map);
-        //"https://api.cognitive.microsoft.com/bing/v5.0/news/?"+ $httpParamSerializer(params)
-        //headers:{"Ocp-Apim-Subscription-Key":'17f27bd753d24a2bbed358e60042a9b5'}
-        $http({
-            method: 'GET',
-            url: "https://api.cognitive.microsoft.com/bing/v7.0/search?"+ $httpParamSerializer(params),
-            headers:{"Ocp-Apim-Subscription-Key":"ff6537d7c53143ddaca11288a7e7b978"}
-        }).then(
-            function successCallback(response) {
-                var popupcontent = '';
-                var stories = response.data.news.value;
-                //Test URL's:
-                //img thumbnail: "https://www.bing.com/th?id=ON.6A50B14DB78999FC57C4BC127E1E541F&pid=News"
-                //at depth: story.image.thumbnail.contentUrl
-                // link: "https://www.usnews.com/education/best-global-universities/united-kingdom"
-                // at depth: story.url
-                // name: "Best Global Universities in the United Kingdom"
-                // at depth: story.name
 
-                for (var i = 0; i <3; i ++) {
-                    var story = stories[i];
-                    var storyurl = story.url;
-                    var storyname = story.name;
-                    var imgurl = "";
-                    // Handle error case with no image.
-                    if (story.image !== undefined
-                        && story.image.thumbnail !== undefined
-                        && story.image.thumbnail.contentUrl !== undefined){
-                        imgurl =story.image.thumbnail.contentUrl;
-                    }
-                    // console.log('image');
-                    // console.log(story.image);
-                    // console.log('thumbnail');
-                    // console.log(story.image.thumbnail);
-                    // console.log('thumbnailurl');
-                    // console.log(story.image.thumbnail.contentUrl);
-                    //var imgurl = story.image.thumbnail.contentUrl;
-                    popupcontent += "<h3><img alt = \"no image could be displayed\" height='75px' " +
-                        "width='75px' src = \"" + imgurl + "\"/>";
-                    popupcontent += "<a href = " + storyurl + " target = \"_blank\">" + storyname + "</a></h3>";
-                    console.log(story);
-                }
-                popup
+        if (countryname in country_stories_dict) {
+        	    popup
                     .setLatLng(e.latlng)
-                    .setContent(popupcontent)
+                    .setContent(country_stories_dict[countryname])
                     .openOn(map);
+                    return
+        }
 
-            }, function errorCallback(response) {
-                popup
-                    .setLatLng(e.latlng)
-                    .setContent("Could not get news for " + countryname +". Try again later.")
-                    .openOn(map);
-            });
-        //Dummy HTTP call so the API call count dosen't decrease.
+        // User clicked on a new country
         // $http({
         //     method: 'GET',
-        //     url: 'http://www.google.com?' + $httpParamSerializer(params),
+        //     url: "https://api.cognitive.microsoft.com/bing/v7.0/search?"+ $httpParamSerializer(params),
+        //     headers:{"Ocp-Apim-Subscription-Key":"dummy_subscription_key"}
         // }).then(
         //     function successCallback(response) {
-        //         var popupcontent = '';
-        //         //var stories = response.data.news.value;
-        //         //Test URL's:
-        //         var storyurl = "https://www.usnews.com/education/best-global-universities/united-kingdom";
-        //         var storyname = "Best Global Universities in the United Kingdom";
-        //         var imgurl  = "https://www.bing.com/th?id=ON.6A50B14DB78999FC57C4BC127E1E541F&pid=News";
-        //         for (var i = 0; i <3; ++i) {
-        //             popupcontent += "<h3><img height='75px' width='75px' src = \"" + imgurl + "\"/>";
-        //             popupcontent += "<a href = " + storyurl + " target = \"_blank\">" + storyname + "</a></h3>";
-        //         }
+        //     	if (response.data === undefined || response.data.news === undefined || response.data.news.value === undefined){
+        //     		popup
+        //             .setLatLng(e.latlng)
+        //             .setContent("Could not get news for " + countryname +". Try again later.")
+        //             .openOn(map);
+        //             return
+        //     	}
+        //         var stories = response.data.news.value;
+        //         var popupcontent = generatePopupString(stories)
+        //         country_stories_dict[countryname] = popupcontent;
         //         popup
         //             .setLatLng(e.latlng)
         //             .setContent(popupcontent)
         //             .openOn(map);
-        //
-        //         console.log(response);
-        //
-        // }, function errorCallback(response) {
-        //         console.log(response);
-        // });
+
+        //     }, function errorCallback(response) {
+        //         popup
+        //             .setLatLng(e.latlng)
+        //             .setContent("Could not get news for " + countryname +". Try again later.")
+        //             .openOn(map);
+        //     });
+
+        //Test URL's:
+        //img thumbnail: "https://www.bing.com/th?id=ON.6A50B14DB78999FC57C4BC127E1E541F&pid=News"
+        //at depth: story.image.thumbnail.contentUrl
+        // link: "https://www.usnews.com/education/best-global-universities/united-kingdom"
+        // at depth: story.url
+        // name: "Best Global Universities in the United Kingdom"
+        // at depth: story.name
+
+        //Dummy HTTP call so the API call count dosen't decrease.
+        $http({
+            method: 'GET',
+            url: 'http://www.google.com?' + $httpParamSerializer(params),
+        }).then(
+            function successCallback(response) {
+                var popupcontent = '';
+                //var stories = response.data.news.value;
+                //Test URL's:
+                var storyurl = "https://www.usnews.com/education/best-global-universities/united-kingdom";
+                var storyname = "Best Global Universities in the United Kingdom";
+                var imgurl  = "https://www.bing.com/th?id=ON.6A50B14DB78999FC57C4BC127E1E541F&pid=News";
+                for (var i = 0; i <3; ++i) {
+                    popupcontent += "<h3><img height='75px' width='75px' src = \"" + imgurl + "\"/>";
+                    popupcontent += "<a href = " + storyurl + " target = \"_blank\">" + storyname + "</a></h3>";
+                }
+                popup
+                    .setLatLng(e.latlng)
+                    .setContent(popupcontent)
+                    .openOn(map);        
+        }, function errorCallback(response) {
+        	popup
+                    .setLatLng(e.latlng)
+                    .setContent("Could not get news for " + countryname +". Try again later.")
+                    .openOn(map);
+        });
     }
 
     function onEachFeature(feature, layer) {
