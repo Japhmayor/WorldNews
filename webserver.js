@@ -21,7 +21,7 @@ var app = express();
 // the work for us.
 app.use(express.static(__dirname));
 
-var server = app.listen(portno, function () {
+var server = app.listen((portno || process.env.PORT ), function () {
   var port = server.address().port;
   console.log('Listening at http://localhost:' + port + ' exporting the directory ' + __dirname);
 });

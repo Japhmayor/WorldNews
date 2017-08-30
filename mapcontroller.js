@@ -5,7 +5,8 @@ var NewsMap = angular.module('NewsMap', ['ngResource']);
 
 NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpParamSerializer',
     function mainControllerSetup($scope, $resource,$http,$httpParamSerializer) {
-    var map = L.map('map').setView([51.505, -0.09], 13);
+    var map = L.map('map');
+    map.setView([51.505, -0.09], 3);
 
     L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
         attribution: 'Map data &copy; ' +
@@ -13,8 +14,8 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         ' <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
         'Imagery © <a href="http://mapbox.com">Mapbox</a>',
         maxZoom: 3,
-        id: 'mapbox.streets',
-        accessToken: 'Dummy_access_token'
+        id: 'mapbox.run-bike-hike',
+        accessToken: 'pk.eyJ1IjoicmFndWlhcjIiLCJhIjoiY2o2cXlqMGkxMDNnNTJ3cGgycDVkbGZ0NyJ9.SqYXt15ZDa3B5ZIAqsqlJA'
     }).addTo(map);
 
     var popup = L.popup();
@@ -25,12 +26,15 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         "opacity": 0.33,
         "fillOpacity": 0
     };
+        document.onreadystatechange = function () {
+            var state = document.readyState;
+            if (state === 'complete') {
+                document.getElementById('interactive');
+                document.getElementById('load').style.visibility="hidden";
+            }
+        };
 
-    var worldGeoJSON = new L.GeoJSON.AJAX('geo-countries-master/data/worldmap.geojson',{
-        style:mapStyle,
-        onEachFeature: onEachFeature
-    });
-    worldGeoJSON.addTo(map);
+
 
     function highlightFeature(e) {
         var layer = e.target;
@@ -46,11 +50,6 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
             layer.bringToFront();
         }
         info.update(layer.feature.properties);
-    }
-
-    function resetHighlight(e) {
-        worldGeoJSON.resetStyle(e.target);
-        info.update();
     }
 
    	function generatePopupString(stories){
@@ -100,7 +99,7 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         // $http({
         //     method: 'GET',
         //     url: "https://api.cognitive.microsoft.com/bing/v7.0/search?"+ $httpParamSerializer(params),
-        //     headers:{"Ocp-Apim-Subscription-Key":"dummy_subscription_key"}
+        //     headers:{"Ocp-Apim-Subscription-Key":"ff6537d7c53143ddaca11288a7e7b978"}
         // }).then(
         //     function successCallback(response) {
         //     	if (response.data === undefined || response.data.news === undefined || response.data.news.value === undefined){
@@ -177,7 +176,7 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         return this._div;
     };
 
-    // method that we will use to update the control based on feature properties passed
+    // method that used to update the control based on feature properties passed
     info.update = function (props) {
         this._div.innerHTML = '<h4>World Map</h4>' +  (props ?
             '<b>' + props.ADMIN
@@ -185,6 +184,18 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
     };
     info.addTo(map);
 
-}]);
+        // TODO: this is expensive. add a timeout?
+        var  worldGeoJSON = new L.GeoJSON.AJAX('geo-countries-master/data/worldmap.geojson', {
+            style: mapStyle,
+            onEachFeature: onEachFeature
+        });
+        worldGeoJSON.addTo(map);
+
+        function resetHighlight(e) {
+            worldGeoJSON.resetStyle(e.target);
+            info.update();
+        }
+
+    }]);
 
 
