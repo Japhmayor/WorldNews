@@ -26,14 +26,6 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         "opacity": 0.33,
         "fillOpacity": 0
     };
-        document.onreadystatechange = function () {
-            var state = document.readyState;
-            if (state === 'complete') {
-                document.getElementById('interactive');
-                document.getElementById('load').style.visibility="hidden";
-            }
-        };
-
 
 
     function highlightFeature(e) {
