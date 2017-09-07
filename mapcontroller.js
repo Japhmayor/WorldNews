@@ -15,7 +15,7 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         'Imagery © <a href="http://mapbox.com">Mapbox</a>',
         maxZoom: 3,
         id: 'mapbox.run-bike-hike',
-        accessToken: 'pk.eyJ1IjoicmFndWlhcjIiLCJhIjoiY2o2cXlqMGkxMDNnNTJ3cGgycDVkbGZ0NyJ9.SqYXt15ZDa3B5ZIAqsqlJA'
+        accessToken: // dummy_token. 
     }).addTo(map);
 
     var popup = L.popup();
@@ -91,7 +91,7 @@ NewsMap.controller('MainController', ['$scope', '$resource', '$http', '$httpPara
         $http({
             method: 'GET',
             url: "https://api.cognitive.microsoft.com/bing/v7.0/search?"+ $httpParamSerializer(params),
-            headers:{"Ocp-Apim-Subscription-Key":"ff6537d7c53143ddaca11288a7e7b978"}
+            headers:{"Ocp-Apim-Subscription-Key": "dummy key" } 
         }).then(
             function successCallback(response) {
             	if (response.data === undefined || response.data.news === undefined || response.data.news.value === undefined){
